@@ -1,4 +1,4 @@
-const Admin = require("../models/admin");
+const Admin = require("../models/user/admin/admin");
 const { default: mongoose } = require("mongoose");
 const bcrypt = require("bcrypt");
 exports.createuser = (req, res) => {
