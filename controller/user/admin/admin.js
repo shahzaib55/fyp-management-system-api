@@ -9,12 +9,7 @@ const Otp = require("../../../models/otpModel");
 const otpGenerator = require("otp-generator");
 require("dotenv/config");
 const nodemailer = require("nodemailer");
-// var accountSid = process.env.TWILIO_ACCOUNT_SID; 
-// var authToken = process.env.TWILIO_AUTH_TOKEN;  
 
-// const client = require('twilio')(accountSid, authToken, {
-//     lazyLoading: false
-// });
 exports.createuser = (req, res) => {
   Admin.find({ email: req.body.email })
     .exec()
@@ -66,28 +61,27 @@ exports.checkuser = (req, res) => {
         });
       } else {
         const number = user[0].mobile;
-        const mail = user[0].email;
+        const email = user[0].email;
         bcrypt.compare(req.body.password, user[0].password, (err, result) => {
           if (err) {
-            res.status(401).json({
+            res.status(403).json({
               message: "auth failed",
             });
-          }
-          if (result) {
-            const OTP = otpGenerator.generate(6, {
+          } else if (result) {
+            const OTP = otpGenerator.generate(4, {
               digits: true,
               lowerCaseAlphabets: false,
               upperCaseAlphabets: false,
               specialChars: false,
             });
             console.log(OTP);
-            const otp = new Otp({ number: number, otp: OTP });
+            const otp = new Otp({ email: email, otp: OTP });
             // const salt = bcrypt.genSalt(10);
             // otp.otp = bcrypt.hash(otp.otp, salt);
             const result = otp.save();
             const mailOption = {
-              from: 'Superior FYP Team',
-              to: mail,
+              from: "Superior FYP Team",
+              to: email,
               subject: "OTP Verification",
               text: `Your OTP Verification code is: ${OTP}`,
               html: `
@@ -95,32 +89,37 @@ exports.checkuser = (req, res) => {
               <p>Your OTP Verification code is: <h3>${OTP}</h3></p>
               <p><b>note: </b> OTP is valid for <b>5 minutes</b></p>
               <p>Regards,</p>
-              <p>Superior FYP Team</p>`
-            }
+              <p>Superior FYP Team</p>`,
+            };
             const transporter = nodemailer.createTransport({
-              service: 'gmail',
+              service: "gmail",
               auth: {
-                  user: 'info.fyp.superior@gmail.com',
-                  pass: 'bghybhpbjnayknyf'
-              }
-          });
-   
-            transporter.sendMail(mailOption,(err,info)=>{
-              if(err){
+                user: "info.fyp.superior@gmail.com",
+                pass: "bghybhpbjnayknyf",
+              },
+            });
+
+            transporter.sendMail(mailOption, (err, info) => {
+              if (err) {
                 console.log(err);
+              } else {
+                console.log("email sent", info.response);
               }
-              else{
-                console.log("email sent",info.response);
-              }
-            }) 
-            
+            });
+            res.status(200).json({
+              message: "auth success",
+            });
+          } else {
+            res.status(401).json({
+              message: "auth failed",
+            });
           }
         });
       }
     })
     .catch((err) => {
       console.log(err);
-      res.status(500).json({
+      res.status(404).json({
         message: "not found",
         error: err,
       });
@@ -129,21 +128,21 @@ exports.checkuser = (req, res) => {
 
 module.exports.verifyOtp = async (req, res) => {
   await Otp.find({
-    number: req.body.number,
+    email: req.body.email,
   })
     .exec()
     .then((otpHolder) => {
       if (otpHolder.length === 0) {
-        return res.status(200).send("you use an expired otp");
+        return res.status(400).send("you use an expired otp");
       }
       const rightOtpFind = otpHolder[otpHolder.length - 1];
       if (
-        rightOtpFind.number === req.body.number &&
+        rightOtpFind.email === req.body.email &&
         req.body.otp === rightOtpFind.otp
       ) {
         // const user = new Admin(_.pick(req.body, ["number"]));
         // const token = user.save()
-        Admin.find({ mobile: req.body.number })
+        Admin.find({ email: req.body.email })
           .exec()
           .then((user) => {
             if (user.length > 0) {
@@ -152,12 +151,13 @@ module.exports.verifyOtp = async (req, res) => {
                   email: user[0].email,
                   userId: user[0]._id,
                 },
-                "helllo",
+                process.env.JWT_SCRET_KEY,
                 {
-                  expiresIn: "1h",
+                  expiresIn: "24h",
                 }
               );
               res.status(200).json({
+                data: user,
                 message: "auth success",
                 token: token,
               });
@@ -165,7 +165,7 @@ module.exports.verifyOtp = async (req, res) => {
           })
           .catch((err) => {
             console.log(err);
-            res.status(500).json({
+            res.status(404).json({
               message: "not found",
               error: err,
             });
