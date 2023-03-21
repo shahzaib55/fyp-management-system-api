@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const LoginSchema = new mongoose.Schema({
+const UserSchema = new mongoose.Schema({
     _id: mongoose.Schema.Types.ObjectId,
     firstname:{
         type: String,
@@ -19,12 +19,33 @@ const LoginSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    student_group:{
+        type: String
+
+    },
+    student_company:{
+        type: String
+
+    },
+    student_section:{
+        type: String
+
+    },
+    role:{
+        type: String,
+        required: true
+
+    },
+    sup_groups:{
+        type: Number
+
+    },
     password:{
         type: String,
         required: true
     },
 });
-LoginSchema.methods.generateJWT = function(){
+UserSchema.methods.generateJWT = function(){
     const token = jwt.sign({
         _id: this.id,
         number: this.number
@@ -32,4 +53,4 @@ LoginSchema.methods.generateJWT = function(){
     return token;
 }
 
-module.exports = mongoose.model('admin',LoginSchema);
+module.exports = mongoose.model('user',UserSchema);

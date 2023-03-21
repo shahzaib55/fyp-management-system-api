@@ -1,8 +1,6 @@
 const User = require("../../../models/user/userModel");
 const { default: mongoose } = require("mongoose");
 const bcrypt = require("bcrypt");
-
-//create new admin
 exports.createuser = (req, res) => {
   User.find({ email: req.body.email })
     .exec()
@@ -24,7 +22,9 @@ exports.createuser = (req, res) => {
               lastname: req.body.lastname,
               email: req.body.email,
               mobile: req.body.mobile,
-              sup_groups: req.body.sup_groups,
+              student_group: req.body.student_group,
+              student_company: req.body.student_company,
+              student_section: req.body.student_section,
               role: req.body.role,
               password: hash,
             });
@@ -45,9 +45,8 @@ exports.createuser = (req, res) => {
       }
     });
 };
-//show student 
+//show All student 
 exports.findAll= (req, res) =>{
-
   User.find({ role: req.body.role })
     .then((user) => {
       res.status(200).json({
@@ -58,9 +57,8 @@ exports.findAll= (req, res) =>{
        res.status(400).send(err);
     })
 };
-//show student 
+//show One student 
 exports.findOne = (req, res) =>{
-  
   const id = req.params.id;
   User.findById(id)
     .then((user) => {
@@ -72,7 +70,6 @@ exports.findOne = (req, res) =>{
        res.status(400).send(err);
     })
 };
-
 //update student
 
 exports.update = (req, res) =>{
@@ -88,7 +85,9 @@ exports.update = (req, res) =>{
       user.lastname = req.body.lastname,
       user.email = req.body.email,
       user.mobile = req.body.mobile,
-      user.sup_groups = req.body.sup_groups
+      user.student_group = req.body.student_group,
+      user.student_company = req.body.student_company,
+      user.student_section = req.body.student_section,
       user.save()
       .then((result)=>{
         res.status(200).json({
@@ -119,11 +118,6 @@ exports.update = (req, res) =>{
 
 //delete student
 exports.delete = (req, res) =>{
-  if(!req.body){
-    return res.status(400).json({
-     message: "Data to update cannot be empty"
-    })
- }
  const id = req.params.id;
  
  User.findByIdAndDelete(id)

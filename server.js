@@ -12,7 +12,7 @@ mongoose
   .then(() => {
     console.log("connected");
   })
-  .catch(() => {
+  .catch((err) => {
     console.log(err);
   });
 

@@ -1,38 +1,35 @@
-const User = require("../../../models/user/userModel");
+const Project = require("../../models/projects/projectModel");
 const { default: mongoose } = require("mongoose");
 const bcrypt = require("bcrypt");
 
-//create new admin
-exports.createuser = (req, res) => {
-  User.find({ email: req.body.email })
+// create project
+exports.create = (req, res) => {
+  Project.find({ rollno: req.body.rollno })
     .exec()
-    .then((user) => {
-      if (user.length >= 1) {
+    .then((data) => {
+      if (data.length >= 1) {
         res.status(409).json({
-          message: "mail exists",
+          message: "roll no exists",
         });
       } else {
-        bcrypt.hash(req.body.password, 10, (err, hash) => {
-          if (err) {
-            res.status(500).json({
-              error: err,
-            });
-          } else {
-            const user = new User({
+            const data = new Project({
               _id: mongoose.Types.ObjectId(),
-              firstname: req.body.firstname,
-              lastname: req.body.lastname,
-              email: req.body.email,
+              group_name: req.body.group_name,
+              rollno: req.body.rollno,
+              section: req.body.section,
               mobile: req.body.mobile,
-              sup_groups: req.body.sup_groups,
-              role: req.body.role,
-              password: hash,
+              email: req.body.email,
+              project_name: req.body.project_name,
+              supervisor: req.body.supervisor,
+              company: req.body.company,
+              company_contact: req.body.company_contact,
+              project_type: req.body.project_type,
             });
-            user
+            data
               .save()
               .then((result) => {
                 res.status(201).json({
-                  message: "user created",
+                  message: "project created",
                 });
               })
               .catch((err) => {
@@ -40,40 +37,35 @@ exports.createuser = (req, res) => {
                   error: err,
                 });
               });
-          }
-        });
       }
     });
 };
-//show student 
-exports.findAll= (req, res) =>{
-
-  User.find({ role: req.body.role })
-    .then((user) => {
-      res.status(200).json({
-        user: user
-      });
-    })
-    .catch((err) => {
-       res.status(400).send(err);
-    })
-};
-//show student 
+//show project
 exports.findOne = (req, res) =>{
-  
-  const id = req.params.id;
-  User.findById(id)
-    .then((user) => {
+  Project.find()
+    .then((data) => {
       res.status(200).json({
-        user: user
+        data: data
       });
     })
     .catch((err) => {
        res.status(400).send(err);
     })
 };
+//show all project
+exports.findAll = (req, res) =>{
+    Project.find()
+      .then((data) => {
+        res.status(200).json({
+          data: data
+        });
+      })
+      .catch((err) => {
+         res.status(400).send(err);
+      })
+  };
 
-//update student
+//update project
 
 exports.update = (req, res) =>{
   if(!req.body){
@@ -82,17 +74,14 @@ exports.update = (req, res) =>{
      })
   }
   const id = req.params.id;
-  User.findById(id)
-    .then((user) => {
-      user.firstname = req.body.firstname,
-      user.lastname = req.body.lastname,
-      user.email = req.body.email,
-      user.mobile = req.body.mobile,
-      user.sup_groups = req.body.sup_groups
-      user.save()
+  Project.findById(id)
+    .then((data) => {
+      data.project_name = req.body.project_name,
+      data.project_type = req.body.project_type,
+       data.save()
       .then((result)=>{
         res.status(200).json({
-          user: user,
+          data: data,
           message: "data updated"
           
         });
@@ -100,7 +89,7 @@ exports.update = (req, res) =>{
       })
       .catch((err)=>{
         res.status(500).json({
-          user: user,
+          error: err,
           message: "cannot update data"
           
         });
@@ -117,7 +106,7 @@ exports.update = (req, res) =>{
 };
 
 
-//delete student
+//delete project
 exports.delete = (req, res) =>{
   if(!req.body){
     return res.status(400).json({
@@ -126,8 +115,8 @@ exports.delete = (req, res) =>{
  }
  const id = req.params.id;
  
- User.findByIdAndDelete(id)
- .then((user) => {
+ Project.findByIdAndDelete(id)
+ .then((data) => {
   res.status(200).json({
     message: "user deleted"
   });
