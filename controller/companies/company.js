@@ -1,32 +1,48 @@
-const Assignment = require("../../models/assignment/assignmentModel");
+const Company = require("../../models/company/companyModel");
 const { default: mongoose } = require("mongoose");
 
 // create project
-exports.create = (req, res) => {
-  const assignment = new Assignment({
-    _id: mongoose.Types.ObjectId(),
-    title: req.body.title,
-    due_date: req.body.due_date,
-    description: req.body.description,
-  });
-  assignment
-    .save()
-    .then((result) => {
-      res.status(201).json({
-        message: "assignment created",
-      });
+exports.create = async (req, res) => {
+    await Company.findOne({company_name: req.body.company_name})
+    .then((user) => {
+      if (user) {
+        res.status(404).json({
+          message: "Company already exist",
+        });
+      }else{
+        const company = new Company({
+          _id: mongoose.Types.ObjectId(),
+          company_name: req.body.company_name,
+          company_contact_person: req.body.company_contact_person,
+          company_email: req.body.company_email,
+          company_mobile: req.body.company_mobile,
+        });
+        company
+          .save()
+          .then((result) => {
+            res.status(201).json({
+              message: "group created",
+            });
+          })
+          .catch((err) => {
+            res.status(501).json({
+              error: err,
+            });
+          });
+      }
     })
     .catch((err) => {
       res.status(501).json({
-        error: err,
+        err: err,
       });
     });
+
 };
 
 //show project
 exports.findOne = (req, res) => {
     const id = req.params.id;
-  Assignment.find(id)
+    Company.find(id)
     .then((data) => {
       res.status(200).json({
         data: data,
@@ -38,7 +54,8 @@ exports.findOne = (req, res) => {
 };
 //show all project
 exports.findAll = (req, res) => {
-  Assignment.find()
+    Company.find()
+    .exec()
     .then((data) => {
       res.status(200).json({
         data: data,
@@ -58,11 +75,12 @@ exports.update = (req, res) => {
     });
   }
   const id = req.params.id;
-  Assignment.findById(id)
+  Company.findById(id)
     .then((data) => {
-        data.title = req.body.title,
-        data.due_date = req.body.due_date,
-        data.description = req.body.description,
+      data.company_name = req.body.company_name,
+      data.company_contact_person = req.body.company_contact_person,
+      data.company_email = req.body.company_email,
+      data.company_mobile = req.body.company_mobile,
         data
           .save()
           .then((result) => {
@@ -90,10 +108,10 @@ exports.update = (req, res) => {
 exports.delete = (req, res) => {
   const id = req.params.id;
 
-  Assignment.findByIdAndDelete(id)
+  Company.findByIdAndDelete(id)
     .then(() => {
       res.status(200).json({
-        message: "assignment deleted",
+        message: "company deleted",
       });
     })
     .catch((err) => {

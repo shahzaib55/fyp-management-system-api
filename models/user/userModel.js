@@ -19,6 +19,10 @@ const UserSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    student_roll_no:{
+        type: String
+
+    },
     student_group:{
         type: String
 

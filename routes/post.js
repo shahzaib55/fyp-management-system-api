@@ -6,6 +6,8 @@ const studentController = require('../controller/user/student/student');
 const projectController = require('../controller/projects/projects');
 const assignmentController = require('../controller/assignments/assignments');
 const announcementController = require('../controller/announcements/announcements');
+const groupController = require('../controller/groups/groups');
+const comapnyController = require('../controller/companies/company');
 const router = express.Router();
 
 // user
@@ -19,14 +21,14 @@ router.put('/admin/update/:id',adminController.update);
 router.delete('/admin/delete/:id',adminController.delete);
 
 //supervisor routes
-router.post('/supervisor/signup',supervisorController.createuser);
+router.post('/supervisor/create',supervisorController.createuser);
 router.get('/supervisor/show/:id',supervisorController.findOne);
 router.get('/supervisor/show',supervisorController.findAll);
 router.put('/supervisor/update/:id',supervisorController.update);
 router.delete('/supervisor/delete/:id',supervisorController.delete);
 
 //student routes
-router.post('/student/signup',studentController.createuser);
+router.post('/student/create',studentController.createuser);
 router.get('/student/show/:id',studentController.findOne );
 router.get('/student/show',studentController.findAll);
 router.put('/student/update/:id',studentController.update);
@@ -54,5 +56,22 @@ router.get('/announcement/show/:id',announcementController.findOne);
 router.get('/announcement/show',announcementController.findAll);
 router.put('/announcement/update/:id',announcementController.update);
 router.delete('/announcement/delete/:id',announcementController.delete);
+
+
+//Group routes
+router.post('/groups/create',groupController.create);
+router.get('/groups/show/:id',groupController.findOne);
+router.get('/groups/show',groupController.findAll);
+router.put('/groups/update/:id',groupController.update);
+router.delete('/groups/delete/:id',groupController.delete);
+
+
+
+//Company routes
+router.post('/Company/create',comapnyController.create);
+router.get('/Company/show/:id',comapnyController.findOne);
+router.get('/Company/show',comapnyController.findAll);
+router.put('/Company/update/:id',comapnyController.update);
+router.delete('/Company/delete/:id',comapnyController.delete);
 module.exports =  router;
 

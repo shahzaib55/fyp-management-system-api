@@ -1,4 +1,4 @@
-const Announcement = require("../../models/announcements/announcementModel");
+const Announcement = require("../../models/announcement/announcementModel");
 const { default: mongoose } = require("mongoose");
 
 // create project
