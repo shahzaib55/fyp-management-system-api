@@ -10,7 +10,6 @@ const supervisorSchema = new mongoose.Schema({
     email:{
         type: String,
         required: true,
-        unique: true
     },
     groups:{
         type: String,

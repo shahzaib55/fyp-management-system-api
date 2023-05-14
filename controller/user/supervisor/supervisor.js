@@ -18,7 +18,7 @@ exports.createuser = (req, res) => {
               error: err,
             });
           } else {
-            const user = new User({
+            const user = new Supervisor({
               _id: mongoose.Types.ObjectId(),
               firstname: req.body.firstname,
               lastname: req.body.lastname,

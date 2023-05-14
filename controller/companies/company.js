@@ -42,7 +42,7 @@ exports.create = async (req, res) => {
 //show project
 exports.findOne = (req, res) => {
     const id = req.params.id;
-    Company.find(id)
+    Company.findOne({_id:id})
     .then((data) => {
       res.status(200).json({
         data: data,

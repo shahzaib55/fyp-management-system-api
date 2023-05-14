@@ -2,74 +2,87 @@ const Project = require("../../models/project/projectModel");
 const { default: mongoose } = require("mongoose");
 const Group = require("../../models/group/groupModel");
 const Supervisor = require("../../models/supervisor/supervisorModel");
+const User = require("../../models/user/userModel");
 const bcrypt = require("bcrypt");
 
 // create project
 exports.create = (req, res) => {
-  var supervisor_id;
-  var group_id;
+  try{
+  let supervisor_id=null,group_id=null;
   Project.findOne({ project_name: req.body.project_name })
     .exec()
     .then((data) => {
       if (data) {
-        res.status(403).json({
+        return res.status(403).json({
           message: "project already exists",
           data
         });
       } else {
-        Group.findOne({ group_name: req.body.group_name })
+        Group.findOne({ group_name: req.body.project_group_name })
           .then((user) => {
             if (user) {
-              group_id = user._id;
-              Supervisor.findOne({ supervisor_name: req.body.supervisor_name })
-                .then((user) => {
-                  if (user) {
-                    supervisor_id = user._id;
-                    const data = new Project({
-                      _id: mongoose.Types.ObjectId(),
-                      project_name: req.body.project_name,
-                      project_type: req.body.project_type,
-                      project_group: group_id,
-                      project_supervisor: supervisor_id,
-                    });
-                    data
-                      .save()
-                      .then((result) => {
-                        res.status(201).json({
-                          message: "project created",
-                        });
-                      })
-                      .catch((err) => {
-                        res.status(501).json({
-                          error: err,
-                        });
-                      });
-                  } else {
-                    res.status(403).json({
-                      message: "supervisor not exist",
-                    });
-                  }
-                })
-                .catch((err) => {
-                  res.status(501).json({
-                    err: err,
-                    msg: "failed",
-                  });
-                });
+              group_id = user.id;
+              
             } else {
-              res.status(404).json({
+            return  res.status(404).json({
                 message: "group not exist",
               });
             }
           })
           .catch((err) => {
-            res.status(501).json({
+           return res.status(501).json({
               err: err,
-              msg: "failed",
+              msg: "internal server error",
             });
           });
-      }
-    });
+      
+    User.findOne({ firstname: req.body.project_supervisor_name, role: "supervisor" })
+                .then((user) => {
+                  if (user) {
+                    supervisor_id = user.id;
+                    console.log(group_id);
+                    console.log(supervisor_id);
+                    let data = new Project({
+                      _id: mongoose.Types.ObjectId(),
+                      project_name: req.body.project_name,
+                      project_type: req.body.project_type,
+                      project_group: group_id,
+                      project_supervisor: supervisor_id
+                    });
+                    const result = data
+                      .save()
+                      if(result){
+                        return res.status(201).json({
+                          result: result,
+                          message: "project created",
+
+                        });
+                      }else{
+                        return res.status(501).json({
+                          error: err,
+                          message: "internal server error1",
+                        });
+                      }
+                  } else {
+                    return res.status(403).json({
+                      message: "supervisor not exist",
+                    });
+                  }
+                })
+                .catch((err) => {
+                  return res.status(501).json({
+                    err: err,
+                    msg: "internal server error",
+                  });
+                });
+              }
+            });
+              }catch(err){
+                return res.status(501).json({
+                  err: err,
+                  msg: "internal server error",
+                });
+              }
 };
 //show project
 exports.findOne = (req, res) => {

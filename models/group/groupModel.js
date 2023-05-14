@@ -26,9 +26,9 @@ const GroupSchema = new mongoose.Schema({
     ref: "user",
     required: true,
   },
-  group_student1: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true, },
-  group_student2: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true, },
-  group_student3: { type: mongoose.Schema.Types.ObjectId, ref: "user", required: true, },
+  group_student1: [{ type: mongoose.Schema.Types.ObjectId, ref: "user", required: true, }],
+  group_student2: [{ type: mongoose.Schema.Types.ObjectId, ref: "user", required: true, }],
+  group_student3: [{ type: mongoose.Schema.Types.ObjectId, ref: "user", required: true, }],
 });
 
 module.exports = mongoose.model("group", GroupSchema);

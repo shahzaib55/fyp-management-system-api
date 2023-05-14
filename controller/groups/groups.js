@@ -4,234 +4,183 @@ const User = require("../../models/user/userModel");
 const Supervisor = require("../../models/supervisor/supervisorModel");
 const Project = require("../../models/project/projectModel");
 
-function checkuser(userRollNo){
-    User.findOne({
-    student_roll_no: userRollNo,
-    role: "student",
-  })
-    .then((user) => {
-     
-      if (user) {
-       return user;
-       
-      } else {
-        return false
-        
-       } 
-      
-    })
-    .catch((user) => {
-     
-      console.log(false)
-      
-    })
-   
-
+// function to check if user exists
+async function checkuser(userRollNo) {
+  try {
+    const user = await User.findOne({
+      student_roll_no: userRollNo,
+      role: "student",
+    });
+    if (user) {
+      return user;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.log(false);
+    return false;
+  }
 }
+// function to check if user exists in any other group
+// async function checkuser(userRollNo1,userRollNo2,userRollNo3) {
+//   try {
+//     const user = await User.findOne({
+//       group_student1: userRollNo1 || userRollNo2 || userRollNo3
+//     });
+//     if (user) {
+//       return user;
+//     } else {
+//       return false;
+//     }
+//   } catch (error) {
+//     console.log(false);
+//     return false;
+//   }
+// }
 // create project
 exports.create = async (req, res) => {
-  var userRoll1;
-  var userRoll2;
-  var userRoll3;
-  var supervisor_id;
-  const userRollNo1 = req.body.group_student1;
-  const userRollNo2 = req.body.group_student2;
-  const userRollNo3 = req.body.group_student3;
+  try {
+    let project_id = null,
+      supervisor_id = null,
+      user_1id = null,
+      user_2id = null,
+      user_3id = null,
+      leader_id = null;
+    const userRollNo1 = req.body.group_student1;
+    const userRollNo2 = req.body.group_student2;
+    const userRollNo3 = req.body.group_student3;
 
- console.log(checkuser(userRollNo1));
+    const [user1, user2, user3] = await Promise.all([
+      checkuser(userRollNo1),
+      checkuser(userRollNo2),
+      checkuser(userRollNo3),
+    ]);
+    user_1id = user1._id;
+    user_2id = user2._id;
+    user_3id = user3._id;
+    if (!user1) {
+      return res
+        .status(404)
+        .json({ error: "users not found1", Rollno: req.body.group_student1 });
+    } else if (!user2) {
+      return res
+        .status(404)
+        .json({ error: "users not found", Rollno: req.body.group_student2 });
+    } else if (!user3) {
+      return res
+        .status(404)
+        .json({ error: "users not found", Rollno: req.body.group_student3 });
+    }
+    const user_1 = await Groups.findOne({
+      group_student1: userRollNo1 || userRollNo2 || userRollNo3,
+    }).exec();
+    if (user_1) {
+      return res.status(403).json({
+        msg: "users Already member of another group",
+        user: user1.student_roll_no,
+      });
+    }
+    const user_2 = await Groups.findOne({
+      group_student2: userRollNo1 || userRollNo2 || userRollNo3,
+    }).exec();
+    if (user_2) {
+      return res.status(403).json({
+        msg: "users Already member of another group",
+        user: user2.student_roll_no,
+      });
+    }
+    const user_3 = await Groups.findOne({
+      group_student3: userRollNo1 || userRollNo2 || userRollNo3,
+    }).exec();
+    if (user_3) {
+      return res.status(403).json({
+        msg: "users Already member of another group",
+        user: user3.student_roll_no,
+      });
+    }
+    const supervisor = await User.findOne({
+      firstname: req.body.group_supervisor,
+      role: "supervisor",
+    }).exec();
+    if (supervisor) {
+      supervisor_id = supervisor._id;
+    } else {
+      return res.status(403).json({
+        msg: "supervisor not exist",
+        user: req.body.group_supervisor,
+      });
+    }
+    const project = await Project.findOne({
+      project_name: req.body.group_project_name,
+    }).exec();
+    if (project) {
+      project_id = project._id;
+    } else {
+      return res.status(403).json({
+        msg: "project not exist",
+        user: req.body.group_project_name,
+      });
+    }
+    const group_leader = req.body.group_leader;
+    if (group_leader === userRollNo1) {
+      leader_id = user_1id;
+    } else if (group_leader === userRollNo2) {
+      leader_id = user_2id;
+    } else if (group_leader === userRollNo3) {
+      leader_id = user_3id;
+    } else {
+      return res.status(403).json({
+        message: "leader must be inside group",
+      });
+    }
+    if (
+      group_leader === userRollNo1 ||
+      group_leader === userRollNo2 ||
+      group_leader === userRollNo3
+    ) {
+      const data = new Groups({
+        _id: mongoose.Types.ObjectId(),
+        group_name: req.body.group_name,
+        group_section: req.body.group_section,
+        group_supervisor: supervisor_id,
+        group_project: project_id,
+        group_leader: userRollNo1,
+        group_student1: req.body.group_student1,
+        group_student2: req.body.group_student2,
+        group_student3: req.body.group_student3,
+      });
+      data
+        .save()
+        .then((result) => {
+          res.status(201).json({
+            message: "group created",
+          });
+        })
+        .catch((err) => {
+          res.status(501).json({
+            error: err,
+          });
+        });
+    }
+    // .then((user)=>{
 
-  // if(student1.res.status === 200){
-  //   res.status(200).json({
-  //     message: "student found",
-  //   });
+    // })
+    // .catch(()=>{})
+    // if (user) {
+    //   return user;
+    // } else {
+    //   return false;
+    // }
 
-  // }else if(student1.res.status === 404){
-  //   res.status(404).json({
-  //     message: "student not exist",
-  //   });
+    // your code to create project here
 
-  // }else{
-  //   res.status(500).json({
-  //     message: "server erropr",
-  //   });
-
-  // }
-
-  //check if rollno1 exits in databae or not
-//   await User.findOne({
-//     student_roll_no: req.body.group_student1,
-//     role: "student",
-//   })
-//     .then((user) => {
-//       if (user) {
-//         userRoll1 = user._id;
-        
-//       } else {
-//         res.status(404).json({
-//           message: "student not exist",
-//           student: req.body.group_student1,
-//         });
-//       }
-//     })
-//     .catch((err) => {
-//       res.status(501).json({
-//         err: err,
-//         msg: "failed",
-//       });
-//     });
-// //check if rollno1 exits in databae or not
-// User.findOne({
-//   student_roll_no: req.body.group_student2,
-//   role: "student",
-// })
-//   .then((user) => {
-//     if (user) {
-//       userRoll2 = user._id;
-//     } else {
-//       res.status(404).json({
-//         message: "student not exist",
-//         student: req.body.group_student2,
-//       });
-//     }
-//   })
-//   .catch((err) => {
-//     res.status(501).json({
-//       err: err,
-//       msg: "failed",
-//     });
-//   });
-//   // //check if rollno1 exits in databae or not
- 
-//   await User.findOne({
-//     student_roll_no: req.body.group_student3,
-//     role: "student",
-//   })
-//     .then((user) => {
-//       if (user) {
-//         userRoll3 = user._id;
-//       } else {
-//         res.status(404).json({
-//           message: "student not exist",
-//           student: req.body.group_student3,
-//         });
-//       }
-//     })
-//     .catch((err) => {
-//       res.status(501).json({
-//         err: err,
-//         msg: "failed",
-//       });
-//     });
-
-//   // // //check if student already exist in any group
-//   // // //check if rollno1 exits in anygroup or not
-//   await Groups.findOne({ group_student1: userRoll1 })
-//     .then((user) => {
-//       if (user) {
-//         res.status(403).json({
-//           message: "student is member of another group",
-//           student: req.body.group_student1,
-//         });
-//       }
-//     })
-//     .catch((err) => {
-//       res.status(501).json({
-//         err: err,
-//       });
-//     });
-//   await Groups.findOne({ group_student2: userRoll2 })
-//     .then((user) => {
-//       if (user) {
-//         res.status(403).json({
-//           message: "student exist",
-//           student: req.body.group_student2,
-//         });
-//       }
-//     })
-//     .catch((err) => {
-//       res.status(501).json({
-//         err: err,
-//       });
-//     });
-//   await Groups.findOne({ group_student3: userRoll3 })
-//     .then((user) => {
-//       if (user) {
-//         res.status(403).json({
-//           message: "student exist",
-//           student: req.body.group_student3,
-//         });
-//       }
-//     })
-//     .catch((err) => {
-//       res.status(501).json({
-//         err: err,
-//       });
-//     });
-//     await Supervisor.findOne({ supervisor_name: req.body.group_supervisor })
-//     .then((user) => {
-//       if (user) {
-//         supervisor_id = user._id;
-//       } else {
-//         res.status(404).json({
-//           message: "student not exist",
-//           student: req.body.group_student1,
-//         });
-//       }
-//     })
-//     .catch((err) => {
-//       res.status(501).json({
-//         err: err,
-//         msg: "failed",
-//       });
-//     });
-//     await Project.findOne({ Project_name: req.body.group_project_name })
-//     .then((user) => {
-//       if (user) {
-//         project_id = user._id;
-//       } else {
-//         res.status(404).json({
-//           message: "project not exist",
-//         });
-//       }
-//     })
-//     .catch((err) => {
-//       res.status(501).json({
-//         err: err,
-//         msg: "failed",
-//       });
-//     });
-//     const group_lead = req.body.group_leader;
-//     if(group_lead === req.body.group_student1 || group_lead === req.body.group_student2 || group_lead === req.body.group_student3){
-//   const group = new Groups({
-//     _id: mongoose.Types.ObjectId(),
-//     group_name: req.body.group_name,
-//     group_section: req.body.group_section,
-//     group_supervisor: supervisor_id,
-//     group_project: project_id,
-//     group_leader: group_lead,
-//     group_student1: userRoll1,
-//     group_student2: userRoll2,
-//     group_student3: userRoll3,
-//   });
-//   await group
-//     .save()
-//     .then((result) => {
-//       res.status(201).json({
-//         result: "group created",
-//       });
-//     })
-//     .catch((err) => {
-//       res.status(500).json({
-//         error: err,
-//         msg: "err",
-//       });
-//     });
-//   }else{
-//     res.status(403).json({
-//       msg: "leader must be inside group",
-//     });
-
-//   }
+    // return res
+    //   .status(200)
+    //   .json({ message: "Project created successfully", user: user1._id });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
 };
 //show project
 exports.findOne = (req, res) => {
