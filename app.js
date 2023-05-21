@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 // const morgan = require('morgan');
 
 // //bring in routes
-const postRoutes = require("./routes/post");
+const postRoutes = require("./routes/index");
 const { json } = require("body-parser");
 
 
